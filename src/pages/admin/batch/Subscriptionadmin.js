@@ -1,129 +1,151 @@
-import React, { useState, useEffect } from "react";
-import "tailwindcss/tailwind.css"; // Ensure Tailwind CSS is imported
-
-// Generate mock data for subscriptions
-const generateSubscriptions = () => {
-  return Array.from({ length: 100 }, (_, i) => ({
-    id: i + 1,
-    name: `Subscription ${i + 1}`,
-    status: i % 2 === 0 ? "Active" : "Inactive",
-    createdDate: new Date(2023, i % 12, i % 28 + 1).toISOString().split("T")[0],
-    amount: (Math.random() * 100).toFixed(2),
-  }));
-};
+import React, { useState } from 'react';
 
 const SubscriptionAdmin = () => {
+  // State to hold form values
+  const [subscription, setSubscription] = useState({
+    name: '',
+    price: '',
+    duration: '',
+    features: [''],
+  });
+
+  // State to hold list of subscriptions
   const [subscriptions, setSubscriptions] = useState([]);
-  const [filteredSubscriptions, setFilteredSubscriptions] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [sortField, setSortField] = useState("name");
-  const [sortDirection, setSortDirection] = useState("asc");
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
 
-  useEffect(() => {
-    setSubscriptions(generateSubscriptions());
-  }, []);
-
-  useEffect(() => {
-    let filtered = subscriptions.filter((sub) =>
-      sub.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
-    filtered = filtered.sort((a, b) => {
-      if (a[sortField] < b[sortField]) return sortDirection === "asc" ? -1 : 1;
-      if (a[sortField] > b[sortField]) return sortDirection === "asc" ? 1 : -1;
-      return 0;
-    });
-
-    setFilteredSubscriptions(filtered);
-  }, [searchTerm, sortField, sortDirection, subscriptions]);
-
-  const handleSearch = (event) => {
-    setSearchTerm(event.target.value);
-    setCurrentPage(1);
+  // Handle input changes
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setSubscription({ ...subscription, [name]: value });
   };
 
-  const handleSort = (field) => {
-    const isAsc = sortField === field && sortDirection === "asc";
-    setSortDirection(isAsc ? "desc" : "asc");
-    setSortField(field);
+  // Handle dynamic features input
+  const handleFeatureChange = (index, value) => {
+    const updatedFeatures = [...subscription.features];
+    updatedFeatures[index] = value;
+    setSubscription({ ...subscription, features: updatedFeatures });
   };
 
-  const handlePageChange = (pageNumber) => {
-    setCurrentPage(pageNumber);
+  // Add a new feature input
+  const addFeature = () => {
+    setSubscription({ ...subscription, features: [...subscription.features, ''] });
   };
 
-  const paginatedData = filteredSubscriptions.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  // Remove a feature input
+  const removeFeature = (index) => {
+    const updatedFeatures = subscription.features.filter((_, i) => i !== index);
+    setSubscription({ ...subscription, features: updatedFeatures });
+  };
+
+  // Handle form submission
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setSubscriptions([...subscriptions, subscription]);
+    setSubscription({ name: '', price: '', duration: '', features: [''] });
+  };
 
   return (
-    <div className="p-5 max-w-3xl mx-auto font-sans">
-      <h2 className="text-2xl font-semibold mb-4 text-center">Subscription Admin</h2>
-      <input
-        type="text"
-        placeholder="Search Subscriptions"
-        value={searchTerm}
-        onChange={handleSearch}
-        className="p-2 mb-4 w-full text-lg border border-gray-300 rounded"
-      />
-      <table className="w-full border-collapse">
-        <thead>
-          <tr className="bg-gray-100">
-            <th className="border p-2">ID</th>
-            <th
-              onClick={() => handleSort("name")}
-              className="border p-2 cursor-pointer text-blue-600"
-            >
-              Name {sortField === "name" ? (sortDirection === "asc" ? "↑" : "↓") : ""}
-            </th>
-            <th className="border p-2">Status</th>
-            <th
-              onClick={() => handleSort("createdDate")}
-              className="border p-2 cursor-pointer text-blue-600"
-            >
-              Created Date {sortField === "createdDate" ? (sortDirection === "asc" ? "↑" : "↓") : ""}
-            </th>
-            <th
-              onClick={() => handleSort("amount")}
-              className="border p-2 cursor-pointer text-blue-600"
-            >
-              Amount {sortField === "amount" ? (sortDirection === "asc" ? "↑" : "↓") : ""}
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {paginatedData.map((sub) => (
-            <tr key={sub.id} className="odd:bg-white even:bg-gray-50">
-              <td className="border p-2 text-center">{sub.id}</td>
-              <td className="border p-2 text-center">{sub.name}</td>
-              <td className="border p-2 text-center">{sub.status}</td>
-              <td className="border p-2 text-center">{sub.createdDate}</td>
-              <td className="border p-2 text-center">${sub.amount}</td>
-            </tr>
+    <div className="p-8 bg-gray-100 rounded-lg shadow-md">
+      <h2 className="text-2xl font-bold mb-6">Add New Subscription</h2>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Subscription Name */}
+        <div>
+          <label className="block text-gray-700 font-semibold mb-2">Name</label>
+          <input
+            type="text"
+            name="name"
+            value={subscription.name}
+            onChange={handleInputChange}
+            className="w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            required
+          />
+        </div>
+
+        {/* Subscription Price */}
+        <div>
+          <label className="block text-gray-700 font-semibold mb-2">Price</label>
+          <input
+            type="number"
+            name="price"
+            value={subscription.price}
+            onChange={handleInputChange}
+            className="w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            required
+          />
+        </div>
+
+        {/* Subscription Duration */}
+        <div>
+          <label className="block text-gray-700 font-semibold mb-2">Duration (in months)</label>
+          <input
+            type="number"
+            name="duration"
+            value={subscription.duration}
+            onChange={handleInputChange}
+            className="w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            required
+          />
+        </div>
+
+        {/* Dynamic Features */}
+        <div>
+          <label className="block text-gray-700 font-semibold mb-2">Features</label>
+          {subscription.features.map((feature, index) => (
+            <div key={index} className="flex items-center space-x-2 mb-2">
+              <input
+                type="text"
+                value={feature}
+                onChange={(e) => handleFeatureChange(index, e.target.value)}
+                className="w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+              <button
+                type="button"
+                onClick={() => removeFeature(index)}
+                className="text-red-500 hover:text-red-700 font-semibold"
+              >
+                Remove
+              </button>
+            </div>
           ))}
-        </tbody>
-      </table>
-      <div className="flex justify-center mt-4">
-        {Array.from(
-          { length: Math.ceil(filteredSubscriptions.length / itemsPerPage) },
-          (_, i) => (
-            <button
-              key={i + 1}
-              onClick={() => handlePageChange(i + 1)}
-              className={`px-3 py-1 mx-1 border rounded ${
-                currentPage === i + 1
-                  ? "bg-blue-600 text-white font-bold"
-                  : "border-gray-300"
-              }`}
-            >
-              {i + 1}
-            </button>
-          )
-        )}
-      </div>
+          <button
+            type="button"
+            onClick={addFeature}
+            className="mt-2 text-blue-500 hover:text-blue-700 font-semibold"
+          >
+            + Add Feature
+          </button>
+        </div>
+
+        {/* Submit Button */}
+        <button
+          type="submit"
+          className="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg"
+        >
+          Add Subscription
+        </button>
+      </form>
+
+      {/* List of Added Subscriptions */}
+      {subscriptions.length > 0 && (
+        <div className="mt-8">
+          <h3 className="text-xl font-semibold mb-4">Subscriptions</h3>
+          <ul className="space-y-4">
+            {subscriptions.map((sub, index) => (
+              <li key={index} className="p-4 bg-white rounded-lg shadow-md">
+                <h4 className="font-bold text-lg">{sub.name}</h4>
+                <p>Price: ${sub.price}</p>
+                <p>Duration: {sub.duration} months</p>
+                <p>Features:</p>
+                <ul className="list-disc ml-6">
+                  {sub.features.map((feature, idx) => (
+                    <li key={idx}>{feature}</li>
+                  ))}
+                </ul>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 };
